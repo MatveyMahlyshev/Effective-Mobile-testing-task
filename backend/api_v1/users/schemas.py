@@ -1,23 +1,34 @@
-from pydantic import BaseModel, EmailStr, ConfigDict, Field
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, model_validator
+from fastapi import HTTPException, status
 
 from annotated_types import MaxLen, MinLen
 
 from typing import Annotated
 
-from core.models.user import UserRole
 
 class UserBase(BaseModel):
     email: Annotated[EmailStr, MinLen(5), MaxLen(255)]
-    role: UserRole = UserRole.USER
-    is_active: bool = False
-
-class User(UserBase):
     model_config = ConfigDict(from_attributes=True)
-    id: int
-
-class UserCreate(UserBase):
     last_name: str = Field(min_length=2, max_length=50)
     first_name: str = Field(min_length=2, max_length=50)
     patronymic: str = Field(min_length=2, max_length=50)
     password: str = Field(min_length=10, max_length=25)
     confirm_password: str = Field(min_length=10, max_length=25)
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserCreate(UserBase):
+    @model_validator(mode="after")
+    def check_passwords_match(self) -> "UserCreate":
+        if self.password != self.confirm_password:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Пароли должны совпадать",
+            )
+        return self
+
+    pass
+
+
+# is_active: bool = False
+# is_superuser: bool = False
