@@ -8,15 +8,15 @@ from typing import Annotated
 class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    email: Annotated[EmailStr, MinLen(5), MaxLen(255)]
     last_name: str = Field(min_length=2, max_length=50)
     first_name: str = Field(min_length=2, max_length=50)
     patronymic: str = Field(min_length=2, max_length=50)
-    password: str = Field(min_length=10, max_length=25)
-    confirm_password: str = Field(min_length=10, max_length=25)
 
 
 class UserCreate(UserBase):
+    email: Annotated[EmailStr, MinLen(5), MaxLen(255)]
+    confirm_password: str = Field(min_length=10, max_length=25)
+
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserCreate":
         if self.password != self.confirm_password:
@@ -25,6 +25,10 @@ class UserCreate(UserBase):
                 detail="Пароли должны совпадать.",
             )
         return self
+
+
+class UserEdit(UserBase):
+    pass
 
 
 # is_active: bool = False

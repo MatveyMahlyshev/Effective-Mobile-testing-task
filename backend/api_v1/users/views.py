@@ -1,11 +1,14 @@
 from fastapi import APIRouter, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api_v1.auth.dependencies import http_bearer, get_current_token_payload
 from core.models import db_helper
-from .schemas import UserCreate
+from .schemas import UserCreate, UserEdit
 from . import crud
 
-router = APIRouter(tags=["Users"])
+main_router = APIRouter(tags=["Users"])
+auth_router = APIRouter(dependencies=[Depends(http_bearer)])
+router = APIRouter()
 
 
 @router.post(
@@ -22,12 +25,17 @@ async def register_user(
     return await crud.create_user(user=user, session=session)
 
 
-@router.put(
+@auth_router.put(
     "/update",
     status_code=status.HTTP_200_OK,
+    # response_model=UserEditCreate,
 )
-async def update_user():
-    pass
+async def update_user(
+    user: UserEdit,
+    payload: dict = Depends(get_current_token_payload),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.update_user(user=user, payload=payload, session=session)
 
 
 @router.delete(
@@ -36,3 +44,7 @@ async def update_user():
 )
 async def delete_user():
     pass
+
+
+main_router.include_router(router)
+main_router.include_router(auth_router)

@@ -23,7 +23,12 @@ async def validate_auth_user(
     if not user or not validate_password(password=password, hashed_password=user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Вы неправильно ввели логин или пароль.",
+            detail="Вы неправильно ввели почту или пароль.",
+        )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ваш аккаунт удалён.",
         )
 
     return user
@@ -47,7 +52,7 @@ def create_refresh_token(user: UserAuthSchema) -> str:
     )
 
 
-async def get_user_by_token_sub(payload: dict, session: AsyncSession) -> UserAuthSchema:
+async def get_user_by_token_sub(payload: dict, session: AsyncSession) -> User:
     email: str | None = payload.get("sub")
     if not email:
         raise HTTPException(
@@ -59,7 +64,10 @@ async def get_user_by_token_sub(payload: dict, session: AsyncSession) -> UserAut
     result: Result = await session.execute(statement=stmt)
     user: User = result.scalar()
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неправильно введены логин или пароль",)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неправильно введены логин или пароль",
+        )
     return user
 
 
