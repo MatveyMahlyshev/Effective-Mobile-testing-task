@@ -7,14 +7,14 @@ from typing import Annotated
 
 
 class UserBase(BaseModel):
-    email: Annotated[EmailStr, MinLen(5), MaxLen(255)]
     model_config = ConfigDict(from_attributes=True)
+
+    email: Annotated[EmailStr, MinLen(5), MaxLen(255)]
     last_name: str = Field(min_length=2, max_length=50)
     first_name: str = Field(min_length=2, max_length=50)
     patronymic: str = Field(min_length=2, max_length=50)
     password: str = Field(min_length=10, max_length=25)
     confirm_password: str = Field(min_length=10, max_length=25)
-    model_config = ConfigDict(from_attributes=True)
 
 
 class UserCreate(UserBase):
@@ -23,11 +23,9 @@ class UserCreate(UserBase):
         if self.password != self.confirm_password:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="Пароли должны совпадать",
+                detail="Пароли должны совпадать.",
             )
         return self
-
-    pass
 
 
 # is_active: bool = False

@@ -11,9 +11,36 @@ router = APIRouter(tags=["Users"])
 @router.post(
     "/register",
     status_code=status.HTTP_201_CREATED,
+    responses={
+        409: {"description": "Электронная почта уже зарегистрирована."},
+    },
 )
-async def create_user(
+async def register_user(
     user: UserCreate,
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     return await crud.create_user(user=user, session=session)
+
+
+@router.put(
+    "/update",
+    status_code=status.HTTP_200_OK,
+)
+async def update_user():
+    pass
+
+
+@router.delete(
+    "/delete",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def delete_user():
+    pass
+
+
+@router.post(
+    "/login",
+    status_code=status.HTTP_200_OK,
+)
+async def login_user():
+    pass
