@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr, ConfigDict, Field, model_validator
 from fastapi import HTTPException, status
-
 from annotated_types import MaxLen, MinLen
 
 from typing import Annotated

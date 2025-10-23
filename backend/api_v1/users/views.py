@@ -12,7 +12,7 @@ router = APIRouter(tags=["Users"])
     "/register",
     status_code=status.HTTP_201_CREATED,
     responses={
-        409: {"description": "Электронная почта уже зарегистрирована."},
+        status.HTTP_401_UNAUTHORIZED: {"description": "Электронная почта уже зарегистрирована."},
     },
 )
 async def register_user(
@@ -35,12 +35,4 @@ async def update_user():
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def delete_user():
-    pass
-
-
-@router.post(
-    "/login",
-    status_code=status.HTTP_200_OK,
-)
-async def login_user():
     pass

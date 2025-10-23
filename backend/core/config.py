@@ -1,5 +1,8 @@
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent.parent
 
 
 class DBSettings(BaseModel):
@@ -7,7 +10,16 @@ class DBSettings(BaseModel):
     echo: bool = False
 
 
+class AuthJWT(BaseModel):
+    private_key: Path = BASE_DIR / "certs" / "jwt-private.pem"
+    public_key: Path = BASE_DIR / "certs" / "jwt-public.pem"
+    algorithm: str = "RS256"
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 60
+
+
 class Settings(BaseSettings):
+    auth: AuthJWT = AuthJWT()
     db: DBSettings = DBSettings()
     api_v1_prefix: str = "/api/v1"
 

@@ -23,7 +23,7 @@ class DataBaseHelper:
 
     async def scoped_session_dependency(self):
         session = self.get_scoped_session()
-        yield
+        yield session
         await session.close()
 
 
