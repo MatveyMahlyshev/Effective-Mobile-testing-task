@@ -28,7 +28,10 @@ async def register_user(
 @auth_router.put(
     "/update",
     status_code=status.HTTP_200_OK,
-    # response_model=UserEditCreate,
+    response_model=UserEdit,
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "Ваш профиль удалён."},
+    },
 )
 async def update_user(
     user: UserEdit,
@@ -38,12 +41,15 @@ async def update_user(
     return await crud.update_user(user=user, payload=payload, session=session)
 
 
-@router.delete(
+@auth_router.delete(
     "/delete",
     status_code=status.HTTP_202_ACCEPTED,
 )
-async def delete_user():
-    pass
+async def delete_user(
+    payload: dict = Depends(get_current_token_payload),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.delete_user(payload=payload, session=session)
 
 
 main_router.include_router(router)

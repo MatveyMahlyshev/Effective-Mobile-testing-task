@@ -3,10 +3,11 @@ from sqlalchemy import select
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
+
 from .schemas import UserCreate, UserEdit
 from core.models import User
 from api_v1.auth.pwd import hash_password
-from api_v1.auth.auth_helpers import get_user_by_token_sub
+from api_v1.auth.auth_helpers import get_user_by_token_sub, is_active
 
 
 async def create_user(user: UserCreate, session: AsyncSession):
@@ -40,9 +41,18 @@ async def create_user(user: UserCreate, session: AsyncSession):
 
 async def update_user(user: UserEdit, payload: dict, session: AsyncSession):
     old_user = await get_user_by_token_sub(payload=payload, session=session)
+    is_active(old_user)
     old_user.first_name = user.first_name
     old_user.last_name = user.last_name
     old_user.patronymic = user.patronymic
 
+    await session.commit()
+    return old_user
+
+
+async def delete_user(payload: dict, session: AsyncSession):
+    old_user = await get_user_by_token_sub(payload=payload, session=session)
+    is_active(old_user)
+    old_user.is_active = False
     await session.commit()
     return old_user

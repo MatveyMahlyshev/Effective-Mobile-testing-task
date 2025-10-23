@@ -17,6 +17,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 http_bearer = HTTPBearer(auto_error=False)
 
 
+def get_current_token(token: str = Depends(oauth2_scheme)):
+    return token
+
+
 def get_current_token_payload(
     token: str = Depends(oauth2_scheme),
 ) -> dict:
@@ -38,11 +42,13 @@ def create_token(
 ):
     jwt_payload = {TokenTypeFields.TOKEN_TYPE_FIELD: token_type}
     jwt_payload.update(token_data)
-    return encode_jwt(
+    token: str = encode_jwt(
         payload=jwt_payload,
         expire_minutes=expire_minutes,
         expire_timedelta=expire_timedelta,
     )
+
+    return token
 
 
 def validate_token_type(payload: dict, token_type: str) -> bool:

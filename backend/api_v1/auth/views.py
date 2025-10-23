@@ -1,14 +1,17 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .dependencies import http_bearer
+from .dependencies import http_bearer, get_current_token
 from .schemas import UserAuthSchema, TokenInfo
 from .auth_helpers import (
     validate_auth_user,
     create_access_token,
     create_refresh_token,
     get_current_auth_user_for_refresh,
+    logout_user,
+    check_token_revoked
 )
+from core.models import db_helper
 
 router = APIRouter(
     tags=["Auth"],
@@ -27,19 +30,37 @@ router = APIRouter(
 )
 async def login_user(
     user: UserAuthSchema = Depends(validate_auth_user),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+    
 ):
 
     access_token = create_access_token(user)
-    refresh_token = create_refresh_token(user)
+    refresh_token = await create_refresh_token(user=user, session=session)
     return TokenInfo(
         access_token=access_token,
         refresh_token=refresh_token,
     )
 
 
-@router.post("/refresh", response_model=TokenInfo, response_model_exclude_none=True)
+@router.post(
+    "/refresh",
+    response_model=TokenInfo,
+    response_model_exclude_none=True,
+    
+)
 async def auth_refresh(
     user: UserAuthSchema = Depends(get_current_auth_user_for_refresh),
 ):
     access_token = create_access_token(user=user)
     return TokenInfo(access_token=access_token)
+
+
+@router.get(
+    "/logout",
+    status_code=status.HTTP_200_OK,
+)
+async def logout(
+    refresh_token: str = Depends(get_current_token),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await logout_user(token=refresh_token, session=session)

@@ -15,6 +15,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     email: Annotated[EmailStr, MinLen(5), MaxLen(255)]
+    password: str = Field(min_length=10, max_length=25)
     confirm_password: str = Field(min_length=10, max_length=25)
 
     @model_validator(mode="after")
