@@ -31,6 +31,9 @@ async def login_user(
     user: UserAuthSchema = Depends(validate_auth_user),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
+    """
+    Генерация access и refresh токенов при логине
+    """
 
     access_token = create_access_token(user)
     refresh_token = await create_refresh_token(user=user, session=session)
@@ -48,6 +51,9 @@ async def login_user(
 async def auth_refresh(
     user: UserAuthSchema = Depends(get_current_auth_user_for_refresh),
 ):
+    """
+    Получение нового access токена по refresh токену
+    """
     access_token = create_access_token(user=user)
     return TokenInfo(access_token=access_token)
 
@@ -60,7 +66,11 @@ async def logout(
     token: str = Depends(get_current_token),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
+    """
+    При логауте старый access токен отправляется в список использованных токенов.
+    По идее refresh токен таким же образом должен попасть в blacklist.
+    """
     return await logout_user(token=token, session=session)
 
 
-# Нужно реализовать добавление аксес токена при логауте, чтобы нельзя было его использовать и там, где берётся этот токен(update, delete), проверять были ли он там.
+# Нужно реализовать добавление аксcес токена при логауте, чтобы нельзя было его использовать и там, где берётся этот токен(update, delete), проверять были ли он там.

@@ -22,6 +22,9 @@ async def register_user(
     user: UserCreate,
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
+    """
+    Регистрация пользователя
+    """
 
     return await crud.create_user(user=user, session=session)
 
@@ -39,6 +42,9 @@ async def update_user(
     token: str = Depends(get_current_token),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
+    """
+    Обновление данных пользователя. В данном случае ФИО.
+    """
     return await crud.update_user(user=user, token=token, session=session)
 
 
@@ -50,6 +56,9 @@ async def delete_user(
     token: str = Depends(get_current_token),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
+    """
+    Мягкое удаление пользователя(флаг is_active становится false)
+    """
     return await crud.delete_user(token=token, session=session)
 
 

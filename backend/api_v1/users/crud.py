@@ -43,7 +43,7 @@ async def create_user(user: UserCreate, session: AsyncSession):
 async def update_user(user: UserEdit, token: str, session: AsyncSession):
     await is_used_token(token=token, session=session)
     payload = get_current_token_payload(token=token)
-    validate_token_type(payload=payload, token_type=TokenTypeFields.ACCESS_TOKEN_TYPE)    
+    validate_token_type(payload=payload, token_type=TokenTypeFields.ACCESS_TOKEN_TYPE)
 
     old_user = await get_user_by_token_sub(payload=payload, session=session)
 
@@ -59,7 +59,7 @@ async def update_user(user: UserEdit, token: str, session: AsyncSession):
 async def delete_user(token: str, session: AsyncSession):
     await is_used_token(token=token, session=session)
     payload = get_current_token_payload(token=token)
-    validate_token_type(payload=payload, token_type=TokenTypeFields.ACCESS_TOKEN_TYPE)    
+    validate_token_type(payload=payload, token_type=TokenTypeFields.ACCESS_TOKEN_TYPE)
     old_user = await get_user_by_token_sub(payload=payload, session=session)
     is_active(old_user)
     old_user.is_active = False

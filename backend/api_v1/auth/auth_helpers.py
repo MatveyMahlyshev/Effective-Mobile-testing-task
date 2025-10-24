@@ -109,3 +109,8 @@ async def logout_user(token: str, session: AsyncSession):
     session.add(Token(token=token))
     await session.commit()
     return {"message": "Success logout."}
+
+
+"""
+Предполагается, что при логауте пользователя
+"""
