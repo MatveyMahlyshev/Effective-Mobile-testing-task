@@ -9,7 +9,6 @@ from .auth_helpers import (
     create_refresh_token,
     get_current_auth_user_for_refresh,
     logout_user,
-    check_token_revoked
 )
 from core.models import db_helper
 
@@ -31,7 +30,6 @@ router = APIRouter(
 async def login_user(
     user: UserAuthSchema = Depends(validate_auth_user),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
-    
 ):
 
     access_token = create_access_token(user)
@@ -46,7 +44,6 @@ async def login_user(
     "/refresh",
     response_model=TokenInfo,
     response_model_exclude_none=True,
-    
 )
 async def auth_refresh(
     user: UserAuthSchema = Depends(get_current_auth_user_for_refresh),
@@ -60,7 +57,10 @@ async def auth_refresh(
     status_code=status.HTTP_200_OK,
 )
 async def logout(
-    refresh_token: str = Depends(get_current_token),
+    token: str = Depends(get_current_token),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
-    return await logout_user(token=refresh_token, session=session)
+    return await logout_user(token=token, session=session)
+
+
+# Нужно реализовать добавление аксес токена при логауте, чтобы нельзя было его использовать и там, где берётся этот токен(update, delete), проверять были ли он там.

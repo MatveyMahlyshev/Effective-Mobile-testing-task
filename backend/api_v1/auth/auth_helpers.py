@@ -15,19 +15,13 @@ from . import dependencies
 from .token import decode_jwt
 
 
-async def check_token_revoked(
-    token: str = Depends(dependencies.get_current_token),
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
-):
-    stmt = select(Token).where(Token.token == token)
-    result = await session.execute(stmt)
-    revoked_token = result.scalar()
-    if revoked_token:
+async def is_used_token(token: str, session: AsyncSession):
+    token_exists = await session.execute(select(Token).where(Token.token == token))
+    if token_exists.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Войдите снова."
+            detail="Invalid token.",
         )
-    return token
 
 
 def is_active(user: User):
@@ -72,9 +66,10 @@ async def create_refresh_token(user: UserAuthSchema, session: AsyncSession) -> s
     token = dependencies.create_token(
         token_type=dependencies.TokenTypeFields.REFRESH_TOKEN_TYPE,
         token_data=jwt_payload,
-        expire_timedelta=timedelta(days=settings.auth.refresh_token_expire_days)
+        expire_timedelta=timedelta(days=settings.auth.refresh_token_expire_days),
     )
     return token
+
 
 async def get_user_by_token_sub(payload: dict, session: AsyncSession) -> User:
     email: str | None = payload.get("sub")

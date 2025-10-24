@@ -7,7 +7,8 @@ from sqlalchemy.exc import IntegrityError
 from .schemas import UserCreate, UserEdit
 from core.models import User
 from api_v1.auth.pwd import hash_password
-from api_v1.auth.auth_helpers import get_user_by_token_sub, is_active
+from api_v1.auth.auth_helpers import get_user_by_token_sub, is_active, is_used_token
+from api_v1.auth.dependencies import get_current_token_payload, validate_token_type, TokenTypeFields
 
 
 async def create_user(user: UserCreate, session: AsyncSession):
@@ -39,8 +40,13 @@ async def create_user(user: UserCreate, session: AsyncSession):
     return new_user
 
 
-async def update_user(user: UserEdit, payload: dict, session: AsyncSession):
+async def update_user(user: UserEdit, token: str, session: AsyncSession):
+    await is_used_token(token=token, session=session)
+    payload = get_current_token_payload(token=token)
+    validate_token_type(payload=payload, token_type=TokenTypeFields.ACCESS_TOKEN_TYPE)    
+
     old_user = await get_user_by_token_sub(payload=payload, session=session)
+
     is_active(old_user)
     old_user.first_name = user.first_name
     old_user.last_name = user.last_name
@@ -50,7 +56,10 @@ async def update_user(user: UserEdit, payload: dict, session: AsyncSession):
     return old_user
 
 
-async def delete_user(payload: dict, session: AsyncSession):
+async def delete_user(token: str, session: AsyncSession):
+    await is_used_token(token=token, session=session)
+    payload = get_current_token_payload(token=token)
+    validate_token_type(payload=payload, token_type=TokenTypeFields.ACCESS_TOKEN_TYPE)    
     old_user = await get_user_by_token_sub(payload=payload, session=session)
     is_active(old_user)
     old_user.is_active = False
