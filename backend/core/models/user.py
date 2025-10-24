@@ -35,7 +35,7 @@ class User(Base):
     )
     is_superuser: Mapped[bool] = mapped_column(Boolean, unique=True)
     is_active: Mapped[bool]
-    permision_level: Mapped[PermissionLevel] = mapped_column(Integer, default=PermissionLevel.USER)
+    permission_level: Mapped[PermissionLevel] = mapped_column(Integer, default=PermissionLevel.USER)
 
     __table_args__ = (
         CheckConstraint(

@@ -158,7 +158,3 @@ async def logout_user(
     await session.commit()
     return {"message": "Success logout."}
 
-
-"""
-Предполагается, что при логауте пользователя
-"""
