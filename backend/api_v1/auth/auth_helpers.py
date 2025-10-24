@@ -51,22 +51,41 @@ async def validate_auth_user(
     return user
 
 
-def create_access_token(user: UserAuthSchema) -> str:
+def create_access_token(user: UserAuthSchema, response: Response) -> str:
     jwt_payload = {
         "sub": user.email,
     }
-    return dependencies.create_token(
+    token = dependencies.create_token(
         token_type=dependencies.TokenTypeFields.ACCESS_TOKEN_TYPE,
         token_data=jwt_payload,
     )
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=60 * 24 * 60 * 60,
+        path="/",
+    )
+    return token
 
 
-async def create_refresh_token(user: UserAuthSchema, session: AsyncSession) -> str:
+def create_refresh_token(user: UserAuthSchema, response: Response):
     jwt_payload = {"sub": user.email}
     token = dependencies.create_token(
         token_type=dependencies.TokenTypeFields.REFRESH_TOKEN_TYPE,
         token_data=jwt_payload,
         expire_timedelta=timedelta(days=settings.auth.refresh_token_expire_days),
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=60 * 24 * 60 * 60,
+        path="/",
     )
     return token
 
@@ -92,12 +111,12 @@ async def get_user_by_token_sub(payload: dict, session: AsyncSession) -> User:
 
 async def get_current_auth_user_for_refresh(
     request: Request,
-    # payload: dict = Depends(dependencies.get_current_token_payload),
+    response: Response,
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ) -> UserAuthSchema:
 
     refresh_token = request.cookies.get("refresh_token")
-    access_token = request.cookies.get("refresh_token")
+    access_token = request.cookies.get("access_token")
 
     if not refresh_token:
         raise HTTPException(
@@ -105,12 +124,17 @@ async def get_current_auth_user_for_refresh(
             detail="Вы не авторизованы для данного действия",
         )
 
-    if int(decode_jwt(refresh_token).get("exp")) - int(time.time()) >= 0:
+    if int(decode_jwt(refresh_token).get("exp")) - int(time.time()) <= 0:
         await logout_user(
             access_token=access_token,
             refresh_token=refresh_token,
             session=session,
+            response=response
         )
+    response.delete_cookie("access_token")
+    session.add(Token(token=access_token))
+    await session.commit()
+
     payload = dependencies.get_current_token_payload(refresh_token)
 
     dependencies.validate_token_type(
@@ -125,6 +149,7 @@ async def logout_user(
     session: AsyncSession,
     response: Response,
 ):
+    
     session.add(Token(token=access_token))
     session.add(Token(token=refresh_token))
     response.delete_cookie("refresh_token")

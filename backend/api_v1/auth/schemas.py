@@ -5,12 +5,9 @@ from typing import Annotated
 
 class TokenInfo(BaseModel):
     access_token: str
-
+    refresh_token: str | None = None
     token_type: str = "bearer"
 
-
-class TokenInfoRefresh(TokenInfo):
-    refresh_token: str | None = None
 
 
 class UserAuthSchema(BaseModel):

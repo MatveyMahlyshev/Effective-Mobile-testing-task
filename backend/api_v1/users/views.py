@@ -1,14 +1,14 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api_v1.auth.dependencies import http_bearer, get_current_token_payload, get_tokens
+from api_v1.auth.auth_helpers import logout_user
 from core.models import db_helper
 from .schemas import UserCreate, UserEdit
 from . import crud
 
-main_router = APIRouter(tags=["Users"])
-auth_router = APIRouter(dependencies=[Depends(http_bearer)])
-router = APIRouter()
+router = APIRouter(tags=["Users"])
+
 
 
 @router.post(
@@ -23,13 +23,13 @@ async def register_user(
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     """
-    Регистрация пользователя
+    Регистрация пользователя.
     """
 
     return await crud.create_user(user=user, session=session)
 
 
-@auth_router.put(
+@router.put(
     "/update",
     status_code=status.HTTP_200_OK,
     response_model=UserEdit,
@@ -39,28 +39,31 @@ async def register_user(
 )
 async def update_user(
     user: UserEdit,
-    token: dict = Depends(get_tokens),
+    tokens: dict = Depends(get_tokens),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     """
     Обновление данных пользователя. В данном случае ФИО.
     """
-    return await crud.update_user(user=user, token=token.get("access_token"), session=session)
+    return await crud.update_user(user=user, token=tokens.get("access_token"), session=session)
 
 
-@auth_router.delete(
+@router.delete(
     "/delete",
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def delete_user(
-    token: dict = Depends(get_tokens),
+    response: Response,
+    tokens: dict = Depends(get_tokens),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     """
-    Мягкое удаление пользователя(флаг is_active становится false)
+    Мягкое удаление пользователя(флаг is_active становится false) и logout.
     """
-    return await crud.delete_user(token=token.get("access_token"), session=session)
-
-
-main_router.include_router(router)
-main_router.include_router(auth_router)
+    await crud.delete_user(token=tokens.get("access_token"), session=session)
+    return await logout_user(
+        access_token=tokens.get("access_token"),
+        refresh_token=tokens.get("refresh_token"),
+        session=session,
+        response=response,
+    )

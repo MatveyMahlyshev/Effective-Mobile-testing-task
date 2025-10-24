@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .dependencies import http_bearer, get_tokens
+from .dependencies import get_tokens
 from .schemas import UserAuthSchema, TokenInfo
 from .auth_helpers import (
     validate_auth_user,
@@ -26,38 +26,22 @@ router = APIRouter(
         status.HTTP_404_NOT_FOUND: {"description": "Ваш аккаунт удалён"},
     },
 )
-async def login_user(
+def login_user(
     response: Response,
     user: UserAuthSchema = Depends(validate_auth_user),
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     """
     Генерация access и refresh, и сохранение в cookies при логине.
     Небезопасно, но для примера сойдёт.
     """
 
-    access_token = create_access_token(user)
-    refresh_token = await create_refresh_token(user=user, session=session)
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=60 * 24 * 60 * 60,
-        path="/",
-    )
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=60 * 24 * 60 * 60,
-        path="/",
-    )
+    access_token = create_access_token(user=user, response=response)
+    refresh_token = create_refresh_token(user=user, response=response)
+    
+    
     return TokenInfo(
         access_token=access_token,
+        refresh_token=refresh_token,
     )
 
 
@@ -65,15 +49,16 @@ async def login_user(
     "/refresh",
     response_model=TokenInfo,
     response_model_exclude_none=True,
-    responses={status.HTTP_401_UNAUTHORIZED: {"description": "Вы не авторизованы."}}
+    responses={status.HTTP_401_UNAUTHORIZED: {"description": "Вы не авторизованы."}},
 )
 async def auth_refresh(
+    response: Response,
     user: UserAuthSchema = Depends(get_current_auth_user_for_refresh),
 ):
     """
     Получение нового access токена по refresh токену
     """
-    access_token = create_access_token(user=user)
+    access_token = create_access_token(user=user, response=response)
     return TokenInfo(access_token=access_token)
 
 
@@ -87,8 +72,7 @@ async def logout(
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     """
-    При логауте старый access токен отправляется в список использованных токенов.
-    По идее refresh токен таким же образом должен попасть в blacklist.
+    При логауте access и refresh токены отправляются в список использованных.
     """
     return await logout_user(
         access_token=token.get("access_token"),
@@ -96,6 +80,3 @@ async def logout(
         session=session,
         response=response,
     )
-
-
-# Нужно реализовать добавление аксcес токена при логауте, чтобы нельзя было его использовать и там, где берётся этот токен(update, delete), проверять были ли он там.
