@@ -1,5 +1,5 @@
 from sqlalchemy.orm import mapped_column, Mapped
-from sqlalchemy import String, Integer, CheckConstraint
+from sqlalchemy import String, Integer, CheckConstraint, Boolean
 from enum import Enum
 
 from .base import Base
@@ -33,7 +33,7 @@ class User(Base):
         String(60),
         nullable=False,
     )
-    is_superuser: Mapped[bool]
+    is_superuser: Mapped[bool] = mapped_column(Boolean, unique=True)
     is_active: Mapped[bool]
     permision_level: Mapped[PermissionLevel] = mapped_column(Integer, default=PermissionLevel.USER)
 
