@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends, Form, status, HTTPException
+from fastapi import Depends, Form, status, HTTPException, Request, Response
 from sqlalchemy import select, Result
 from typing import Annotated
 from pydantic import EmailStr
@@ -91,13 +91,27 @@ async def get_user_by_token_sub(payload: dict, session: AsyncSession) -> User:
 
 
 async def get_current_auth_user_for_refresh(
-    token: str = Depends(dependencies.get_current_token),
-    payload: dict = Depends(dependencies.get_current_token_payload),
+    request: Request,
+    # payload: dict = Depends(dependencies.get_current_token_payload),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ) -> UserAuthSchema:
 
-    if int(decode_jwt(token).get("exp")) - int(time.time()) <= 0:
-        await logout_user(token=token, session=session)
+    refresh_token = request.cookies.get("refresh_token")
+    access_token = request.cookies.get("refresh_token")
+
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Вы не авторизованы для данного действия",
+        )
+
+    if int(decode_jwt(refresh_token).get("exp")) - int(time.time()) >= 0:
+        await logout_user(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            session=session,
+        )
+    payload = dependencies.get_current_token_payload(refresh_token)
 
     dependencies.validate_token_type(
         payload=payload, token_type=dependencies.TokenTypeFields.REFRESH_TOKEN_TYPE
@@ -105,8 +119,17 @@ async def get_current_auth_user_for_refresh(
     return await get_user_by_token_sub(payload=payload, session=session)
 
 
-async def logout_user(token: str, session: AsyncSession):
-    session.add(Token(token=token))
+async def logout_user(
+    access_token: str,
+    refresh_token: str,
+    session: AsyncSession,
+    response: Response,
+):
+    session.add(Token(token=access_token))
+    session.add(Token(token=refresh_token))
+    response.delete_cookie("refresh_token")
+    response.delete_cookie("access_token")
+
     await session.commit()
     return {"message": "Success logout."}
 

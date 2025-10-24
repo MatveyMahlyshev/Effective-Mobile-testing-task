@@ -1,5 +1,5 @@
 from fastapi.security import HTTPBearer, OAuth2PasswordBearer
-from fastapi import Depends, status, HTTPException
+from fastapi import Depends, status, HTTPException, Request
 from jwt.exceptions import InvalidTokenError
 from datetime import timedelta
 
@@ -17,12 +17,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 http_bearer = HTTPBearer(auto_error=False)
 
 
-def get_current_token(token: str = Depends(oauth2_scheme)):
-    return token
+def get_tokens(request: Request) -> dict:
+    return {
+        "access_token": request.cookies.get("access_token"),
+        "refresh_token": request.cookies.get("refresh_token"),
+    }
 
 
 def get_current_token_payload(
-    token: str = Depends(oauth2_scheme),
+    token: str,
 ) -> dict:
     try:
         payload = decode_jwt(token=token)

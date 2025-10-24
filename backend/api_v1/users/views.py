@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api_v1.auth.dependencies import http_bearer, get_current_token_payload, get_current_token
+from api_v1.auth.dependencies import http_bearer, get_current_token_payload, get_tokens
 from core.models import db_helper
 from .schemas import UserCreate, UserEdit
 from . import crud
@@ -39,13 +39,13 @@ async def register_user(
 )
 async def update_user(
     user: UserEdit,
-    token: str = Depends(get_current_token),
+    token: dict = Depends(get_tokens),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     """
     Обновление данных пользователя. В данном случае ФИО.
     """
-    return await crud.update_user(user=user, token=token, session=session)
+    return await crud.update_user(user=user, token=token.get("access_token"), session=session)
 
 
 @auth_router.delete(
@@ -53,13 +53,13 @@ async def update_user(
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def delete_user(
-    token: str = Depends(get_current_token),
+    token: dict = Depends(get_tokens),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     """
     Мягкое удаление пользователя(флаг is_active становится false)
     """
-    return await crud.delete_user(token=token, session=session)
+    return await crud.delete_user(token=token.get("access_token"), session=session)
 
 
 main_router.include_router(router)
