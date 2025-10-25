@@ -12,14 +12,29 @@ class UserEmail(BaseModel):
 class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    last_name: str = Field(min_length=2, max_length=50)
-    first_name: str = Field(min_length=2, max_length=50)
-    patronymic: str = Field(min_length=2, max_length=50)
+    last_name: str = Field(
+        min_length=2,
+        max_length=50,
+    )
+    first_name: str = Field(
+        min_length=2,
+        max_length=50,
+    )
+    patronymic: str = Field(
+        min_length=2,
+        max_length=50,
+    )
 
 
 class UserCreate(UserBase, UserEmail):
-    password: str = Field(min_length=10, max_length=25)
-    confirm_password: str = Field(min_length=10, max_length=25)
+    password: str = Field(
+        min_length=10,
+        max_length=25,
+    )
+    confirm_password: str = Field(
+        min_length=10,
+        max_length=25,
+    )
 
     @model_validator(mode="after")
     def check_passwords_match(self) -> "UserCreate":
@@ -40,7 +55,3 @@ class UserGet(UserBase, UserEmail):
 
 class UserEdit(UserBase):
     pass
-
-
-# is_active: bool = False
-# is_superuser: bool = False

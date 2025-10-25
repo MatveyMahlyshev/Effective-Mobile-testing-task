@@ -31,11 +31,16 @@ async def get_user_by_id(
     Получение пользователя по id. Только для админа и модератора.
     """
     return await crud.get_user_by_id(
-        user_id=user_id, token=tokens.get("access_token"), session=session
+        user_id=user_id,
+        token=tokens.get("access_token"),
+        session=session,
     )
 
 
-@router.patch("/edit_permission/{user_id}", response_model=UserGet)
+@router.patch(
+    "/edit_permission/{user_id}",
+    response_model=UserGet,
+)
 async def edit_user_permission(
     permission: EditPermission,
     user_id: int,

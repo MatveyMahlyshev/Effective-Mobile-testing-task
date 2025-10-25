@@ -15,7 +15,9 @@ router = APIRouter(tags=["Users"])
     "/register",
     status_code=status.HTTP_201_CREATED,
     responses={
-        status.HTTP_401_UNAUTHORIZED: {"description": "Электронная почта уже зарегистрирована."},
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Электронная почта уже зарегистрирована."
+        },
     },
 )
 async def register_user(
@@ -26,16 +28,16 @@ async def register_user(
     Регистрация пользователя.
     """
 
-    return await crud.create_user(user=user, session=session)
+    return await crud.create_user(
+        user=user,
+        session=session,
+    )
 
 
 @router.put(
     "/update",
     status_code=status.HTTP_200_OK,
     response_model=UserEdit,
-    responses={
-        status.HTTP_404_NOT_FOUND: {"description": "Ваш профиль удалён."},
-    },
 )
 async def update_user(
     user: UserEdit,
@@ -45,7 +47,11 @@ async def update_user(
     """
     Обновление данных пользователя. В данном случае ФИО.
     """
-    return await crud.update_user(user=user, token=tokens.get("access_token"), session=session)
+    return await crud.update_user(
+        user=user,
+        token=tokens.get("access_token"),
+        session=session,
+    )
 
 
 @router.delete(
@@ -60,7 +66,10 @@ async def delete_user(
     """
     Мягкое удаление пользователя(флаг is_active становится false) и logout.
     """
-    await crud.delete_user(token=tokens.get("access_token"), session=session)
+    await crud.delete_user(
+        token=tokens.get("access_token"),
+        session=session,
+    )
     return await logout_user(
         access_token=tokens.get("access_token"),
         refresh_token=tokens.get("refresh_token"),

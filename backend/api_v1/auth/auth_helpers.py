@@ -42,7 +42,9 @@ async def validate_auth_user(
     stmt = select(User).where(User.email == email)
     result: Result = await session.execute(statement=stmt)
     user: User = result.scalar()
-    if not user or not validate_password(password=password, hashed_password=user.password):
+    if not user or not validate_password(
+        password=password, hashed_password=user.password
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Вы неправильно ввели почту или пароль.",
@@ -91,7 +93,10 @@ def create_refresh_token(user: UserAuthSchema, response: Response):
     return token
 
 
-async def get_user_by_token_sub(payload: dict, session: AsyncSession) -> User:
+async def get_user_by_token_sub(
+    payload: dict,
+    session: AsyncSession,
+) -> User:
     email: str | None = payload.get("sub")
     if not email:
         raise HTTPException(
@@ -139,9 +144,13 @@ async def get_current_auth_user_for_refresh(
     payload = dependencies.get_current_token_payload(refresh_token)
 
     dependencies.validate_token_type(
-        payload=payload, token_type=dependencies.TokenTypeFields.REFRESH_TOKEN_TYPE
+        payload=payload,
+        token_type=dependencies.TokenTypeFields.REFRESH_TOKEN_TYPE,
     )
-    return await get_user_by_token_sub(payload=payload, session=session)
+    return await get_user_by_token_sub(
+        payload=payload,
+        session=session,
+    )
 
 
 async def logout_user(

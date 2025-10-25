@@ -5,18 +5,39 @@ from fastapi import HTTPException, status
 from api_v1.auth.permissions import check_permission
 from core.models import User
 from api_v1.rollback import try_commit
+from core.models.user import PermissionLevel
 
 
 async def get_users(token: str, session: AsyncSession) -> list[User]:
-    await check_permission(token=token, session=session, permissions=[3, 2])
+    await check_permission(
+        token=token,
+        session=session,
+        permissions=[
+            PermissionLevel.ADMIN,
+            PermissionLevel.MODERATOR,
+        ],
+        super_admin=True
+    )
     stmt = select(User).order_by(User.id)
     result = await session.execute(stmt)
     users = result.scalars().all()
     return users
 
 
-async def get_user_by_id(user_id: int, token: str, session: AsyncSession) -> User:
-    await check_permission(token=token, session=session, permissions=[3, 2])
+async def get_user_by_id(
+    user_id: int,
+    token: str,
+    session: AsyncSession,
+) -> User:
+    await check_permission(
+        token=token,
+        session=session,
+        permissions=[
+            PermissionLevel.ADMIN,
+            PermissionLevel.MODERATOR,
+        ],
+        super_admin=True,
+    )
     result = await session.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
@@ -33,9 +54,18 @@ async def edit_user_permission(
     session: AsyncSession,
     new_permission: int,
 ) -> User:
-    await check_permission(token=token, session=session, permissions=[3], super_admin=True)
+    await check_permission(
+        token=token,
+        session=session,
+        permissions=[PermissionLevel.ADMIN],
+        super_admin=True,
+    )
 
-    user = await get_user_by_id(user_id=user_id, token=token, session=session)
+    user = await get_user_by_id(
+        user_id=user_id,
+        token=token,
+        session=session,
+    )
     user.permission_level = new_permission
     await try_commit(session=session)
     return user

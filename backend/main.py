@@ -9,6 +9,7 @@ from core.config import settings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from create_admin import create_admin
+
     await create_admin()
     yield
 

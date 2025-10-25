@@ -54,7 +54,10 @@ def create_token(
     return token
 
 
-def validate_token_type(payload: dict, token_type: str) -> bool:
+def validate_token_type(
+    payload: dict,
+    token_type: str,
+) -> bool:
     if payload.get(TokenTypeFields.TOKEN_TYPE_FIELD) == token_type:
         return True
     raise HTTPException(

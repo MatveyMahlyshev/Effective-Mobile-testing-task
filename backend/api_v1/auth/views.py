@@ -22,7 +22,9 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
     response_model=TokenInfo,
     responses={
-        status.HTTP_401_UNAUTHORIZED: {"description": "Вы неправильно ввели логин или пароль."},
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Вы неправильно ввели логин или пароль."
+        },
         status.HTTP_404_NOT_FOUND: {"description": "Ваш аккаунт удалён"},
     },
 )
@@ -35,8 +37,14 @@ def login_user(
     Небезопасно, но для примера сойдёт.
     """
 
-    access_token = create_access_token(user=user, response=response)
-    refresh_token = create_refresh_token(user=user, response=response)
+    access_token = create_access_token(
+        user=user,
+        response=response,
+    )
+    refresh_token = create_refresh_token(
+        user=user,
+        response=response,
+    )
 
     return TokenInfo(
         access_token=access_token,
@@ -57,7 +65,10 @@ async def auth_refresh(
     """
     Получение нового access токена по refresh токену
     """
-    access_token = create_access_token(user=user, response=response)
+    access_token = create_access_token(
+        user=user,
+        response=response,
+    )
     return TokenInfo(access_token=access_token)
 
 

@@ -21,7 +21,11 @@ def encode_jwt(
         exp=expire,
         iat=now,
     )
-    encoded = jwt.encode(to_encode, private_key, algorithm=algorithm)
+    encoded = jwt.encode(
+        to_encode,
+        private_key,
+        algorithm=algorithm,
+    )
 
     return encoded
 
@@ -31,5 +35,9 @@ def decode_jwt(
     public_key: str = settings.auth.public_key.read_text(),
     algorithm: str = settings.auth.algorithm,
 ):
-    decoded = jwt.decode(token, public_key, algorithms=[algorithm])
+    decoded = jwt.decode(
+        token,
+        public_key,
+        algorithms=[algorithm],
+    )
     return decoded

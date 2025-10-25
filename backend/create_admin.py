@@ -9,7 +9,9 @@ async def create_admin():
     Создаёт главного админа, если его ещё нет.
     """
     async with db_helper.session_factory() as session:
-        exists = await session.execute(select(User).where(User.email == "admin@admin.com"))
+        exists = await session.execute(
+            select(User).where(User.email == "admin@admin.com")
+        )
         if not exists.scalar_one_or_none():
             admin = "admin"
             user = User(

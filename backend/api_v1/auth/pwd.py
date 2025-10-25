@@ -8,7 +8,10 @@ def hash_password(password: str) -> str:
     return hashed_bytes.decode("utf-8")
 
 
-def validate_password(password: str, hashed_password: str) -> bool:
+def validate_password(
+    password: str,
+    hashed_password: str,
+) -> bool:
     return bcrypt.checkpw(
         password.encode(),
         hashed_password.encode(),
