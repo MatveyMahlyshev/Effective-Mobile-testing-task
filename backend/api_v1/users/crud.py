@@ -65,20 +65,3 @@ async def delete_user(token: str, session: AsyncSession):
     old_user.is_active = False
     await try_commit(session=session)
     return old_user
-
-
-async def get_users(token: str, session: AsyncSession) -> list[User]:
-    await check_permission(token=token, session=session, permissions=[3, 2])
-    stmt = select(User).order_by(User.id)
-    result = await session.execute(stmt)
-    users = result.scalars().all()
-    return users
-
-async def get_user_by_id(user_id: int, token: str, session: AsyncSession) -> User:
-    await check_permission(token=token, session=session, permissions=[3, 2])
-    result = await session.execute(select(User).where(User.id==user_id))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found",)
-    return user
-    

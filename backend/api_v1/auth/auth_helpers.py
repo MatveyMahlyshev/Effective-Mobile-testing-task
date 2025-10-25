@@ -21,7 +21,7 @@ async def is_used_token(token: str, session: AsyncSession):
     if token_exists.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token.",
+            detail="Неправильынй токен.",
         )
 
 
@@ -150,6 +150,12 @@ async def logout_user(
     session: AsyncSession,
     response: Response,
 ):
+
+    if not (access_token and refresh_token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Чтобы выйти из системы, нужно сначала зайти.",
+        )
 
     session.add(Token(token=access_token))
     session.add(Token(token=refresh_token))

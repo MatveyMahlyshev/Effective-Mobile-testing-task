@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from api_v1.users.views import router as users_router
 from api_v1.auth.views import router as auth_router
+from api_v1.admin.views import router as admin_router
 
 router = APIRouter()
 router.include_router(
@@ -11,4 +12,8 @@ router.include_router(
 router.include_router(
     router=auth_router,
     prefix="/auth",
+)
+router.include_router(
+    router=admin_router,
+    prefix="/admin",
 )
