@@ -9,7 +9,6 @@ class TokenInfo(BaseModel):
     token_type: str = "bearer"
 
 
-
 class UserAuthSchema(BaseModel):
     model_config = ConfigDict(strict=True)
     email: Annotated[EmailStr, MinLen(5), MaxLen(255)]

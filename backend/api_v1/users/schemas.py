@@ -5,6 +5,10 @@ from annotated_types import MaxLen, MinLen
 from typing import Annotated
 
 
+class UserEmail(BaseModel):
+    email: Annotated[EmailStr, MinLen(5), MaxLen(255)]
+
+
 class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -13,8 +17,7 @@ class UserBase(BaseModel):
     patronymic: str = Field(min_length=2, max_length=50)
 
 
-class UserCreate(UserBase):
-    email: Annotated[EmailStr, MinLen(5), MaxLen(255)]
+class UserCreate(UserBase, UserEmail):
     password: str = Field(min_length=10, max_length=25)
     confirm_password: str = Field(min_length=10, max_length=25)
 
@@ -26,6 +29,13 @@ class UserCreate(UserBase):
                 detail="Пароли должны совпадать.",
             )
         return self
+
+
+class UserGet(UserBase, UserEmail):
+    id: int
+    is_superuser: bool
+    is_active: bool
+    permission_level: int
 
 
 class UserEdit(UserBase):

@@ -13,6 +13,7 @@ from .pwd import validate_password
 from .schemas import UserAuthSchema
 from . import dependencies
 from .token import decode_jwt
+from api_v1.rollback import try_commit
 
 
 async def is_used_token(token: str, session: AsyncSession):
@@ -129,11 +130,11 @@ async def get_current_auth_user_for_refresh(
             access_token=access_token,
             refresh_token=refresh_token,
             session=session,
-            response=response
+            response=response,
         )
     response.delete_cookie("access_token")
     session.add(Token(token=access_token))
-    await session.commit()
+    await try_commit(session=session)
 
     payload = dependencies.get_current_token_payload(refresh_token)
 
@@ -149,12 +150,10 @@ async def logout_user(
     session: AsyncSession,
     response: Response,
 ):
-    
+
     session.add(Token(token=access_token))
     session.add(Token(token=refresh_token))
     response.delete_cookie("refresh_token")
     response.delete_cookie("access_token")
-
-    await session.commit()
+    await try_commit(session=session)
     return {"message": "Success logout."}
-

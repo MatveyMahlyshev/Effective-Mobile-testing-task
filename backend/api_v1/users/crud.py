@@ -1,14 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import HTTPException, status
-from sqlalchemy.exc import IntegrityError
 
 
 from .schemas import UserCreate, UserEdit
 from core.models import User
+
 from api_v1.auth.pwd import hash_password
 from api_v1.auth.auth_helpers import get_user_by_token_sub, is_active, is_used_token
 from api_v1.auth.dependencies import get_current_token_payload, validate_token_type, TokenTypeFields
+from api_v1.rollback import try_commit
+from api_v1.auth.permissions import check_permission
 
 
 async def create_user(user: UserCreate, session: AsyncSession):
@@ -26,17 +28,15 @@ async def create_user(user: UserCreate, session: AsyncSession):
         password=hash_password(user.password),
         is_active=True,
         is_superuser=False,
+        permission_level=1,
     )
     session.add(new_user)
 
-    try:
-        await session.commit()
-    except IntegrityError:
-        await session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Электронная почта уже зарегистрирована.",
-        )
+    await try_commit(
+        session=session,
+        status=status.HTTP_409_CONFLICT,
+        text="Пользователь уже зарегистрирован с таким email.",
+    )
     return new_user
 
 
@@ -52,7 +52,7 @@ async def update_user(user: UserEdit, token: str, session: AsyncSession):
     old_user.last_name = user.last_name
     old_user.patronymic = user.patronymic
 
-    await session.commit()
+    await try_commit(session=session)
     return old_user
 
 
@@ -63,5 +63,22 @@ async def delete_user(token: str, session: AsyncSession):
     old_user = await get_user_by_token_sub(payload=payload, session=session)
     is_active(old_user)
     old_user.is_active = False
-    await session.commit()
+    await try_commit(session=session)
     return old_user
+
+
+async def get_users(token: str, session: AsyncSession) -> list[User]:
+    await check_permission(token=token, session=session, permissions=[3, 2])
+    stmt = select(User).order_by(User.id)
+    result = await session.execute(stmt)
+    users = result.scalars().all()
+    return users
+
+async def get_user_by_id(user_id: int, token: str, session: AsyncSession) -> User:
+    await check_permission(token=token, session=session, permissions=[3, 2])
+    result = await session.execute(select(User).where(User.id==user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found",)
+    return user
+    

@@ -32,7 +32,7 @@ def get_current_token_payload(
     except InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
+            detail="Вы неавторизованы.",
         )
     return payload
 

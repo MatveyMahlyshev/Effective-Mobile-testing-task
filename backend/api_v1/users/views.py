@@ -1,14 +1,13 @@
 from fastapi import APIRouter, status, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api_v1.auth.dependencies import http_bearer, get_current_token_payload, get_tokens
+from api_v1.auth.dependencies import get_tokens
 from api_v1.auth.auth_helpers import logout_user
 from core.models import db_helper
-from .schemas import UserCreate, UserEdit
+from .schemas import UserCreate, UserEdit, UserGet
 from . import crud
 
 router = APIRouter(tags=["Users"])
-
 
 
 @router.post(
@@ -67,3 +66,22 @@ async def delete_user(
         session=session,
         response=response,
     )
+
+
+@router.get("/users/list",
+            response_model=list[UserGet])
+async def get_users(
+    tokens: dict = Depends(get_tokens),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.get_users(token=tokens.get("access_token"), session=session)
+
+
+"""
+Нужно во всех запросах с коммитом добавить try
+"""
+@router.get("/users/{user_id}", response_model=UserGet)
+async def get_user_by_id(user_id: int, tokens: dict = Depends(get_tokens),
+                         session: AsyncSession = Depends(db_helper.scoped_session_dependency),):
+    return await crud.get_user_by_id(user_id=user_id, token=tokens.get("access_token"), session=session)
+

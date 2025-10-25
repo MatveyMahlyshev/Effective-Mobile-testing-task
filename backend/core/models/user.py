@@ -1,8 +1,9 @@
 from sqlalchemy.orm import mapped_column, Mapped
-from sqlalchemy import String, Integer, CheckConstraint, Boolean
+from sqlalchemy import String, Integer, CheckConstraint
 from enum import Enum
 
 from .base import Base
+
 
 class PermissionLevel(Enum):
     USER = 1
@@ -33,13 +34,12 @@ class User(Base):
         String(60),
         nullable=False,
     )
-    is_superuser: Mapped[bool] = mapped_column(Boolean, unique=True)
+    is_superuser: Mapped[bool]
     is_active: Mapped[bool]
     permission_level: Mapped[PermissionLevel] = mapped_column(Integer, default=PermissionLevel.USER)
 
     __table_args__ = (
         CheckConstraint(
-            'permission_level >= 1 AND permission_level <= 3', 
-            name='check_permission_level_range'
+            "permission_level >= 1 AND permission_level <= 3", name="check_permission_level_range"
         ),
     )

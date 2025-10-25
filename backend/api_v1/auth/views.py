@@ -37,8 +37,7 @@ def login_user(
 
     access_token = create_access_token(user=user, response=response)
     refresh_token = create_refresh_token(user=user, response=response)
-    
-    
+
     return TokenInfo(
         access_token=access_token,
         refresh_token=refresh_token,
