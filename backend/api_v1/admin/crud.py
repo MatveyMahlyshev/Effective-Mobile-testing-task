@@ -16,7 +16,7 @@ async def get_users(token: str, session: AsyncSession) -> list[User]:
             PermissionLevel.ADMIN,
             PermissionLevel.MODERATOR,
         ],
-        super_admin=True
+        super_admin=True,
     )
     stmt = select(User).order_by(User.id)
     result = await session.execute(stmt)

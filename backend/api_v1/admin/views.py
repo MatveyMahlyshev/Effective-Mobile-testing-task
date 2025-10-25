@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api_v1.auth.dependencies import get_tokens
@@ -10,7 +10,10 @@ from .schemas import EditPermission
 router = APIRouter(tags=["Admin"])
 
 
-@router.get("/users/list", response_model=list[UserGet])
+@router.get("/users/list", response_model=list[UserGet],
+            responses={
+        status.HTTP_403_FORBIDDEN: {"describe": "У вас нет доступа к запрашиваемому ресурсу"},
+    })
 async def get_users(
     tokens: dict = Depends(get_tokens),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
@@ -21,7 +24,10 @@ async def get_users(
     return await crud.get_users(token=tokens.get("access_token"), session=session)
 
 
-@router.get("/users/{user_id}", response_model=UserGet)
+@router.get("/users/{user_id}", response_model=UserGet,
+            responses={
+        status.HTTP_403_FORBIDDEN: {"describe": "У вас нет доступа к запрашиваемому ресурсу"},
+    })
 async def get_user_by_id(
     user_id: int,
     tokens: dict = Depends(get_tokens),
@@ -40,6 +46,9 @@ async def get_user_by_id(
 @router.patch(
     "/edit_permission/{user_id}",
     response_model=UserGet,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"describe": "У вас нет доступа к запрашиваемому ресурсу"},
+    }
 )
 async def edit_user_permission(
     permission: EditPermission,
