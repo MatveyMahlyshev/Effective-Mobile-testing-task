@@ -33,7 +33,8 @@ async def edit_user_permission(
     session: AsyncSession,
     new_permission: int,
 ) -> User:
-    await check_permission(token=token, session=session, permissions=[3])
+    await check_permission(token=token, session=session, permissions=[3], super_admin=True)
+
     user = await get_user_by_id(user_id=user_id, token=token, session=session)
     user.permission_level = new_permission
     await try_commit(session=session)

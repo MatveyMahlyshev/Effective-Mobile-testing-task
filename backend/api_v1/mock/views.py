@@ -19,12 +19,22 @@ def get_codes_for_all_users():
     """Простейшая view. Данные может получить любой пользователь"""
     return codes
 
+
 @router.get("/codes/secret/for/admins/and/moderators", status_code=status.HTTP_200_OK)
-async def get_codes_for_admins_and_moderators(tokens: dict = Depends(get_tokens), session: AsyncSession = Depends(db_helper.scoped_session_dependency)):
+async def get_codes_for_admins_and_moderators(
+    tokens: dict = Depends(get_tokens),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
     """View c проверкой на то, является ли пользователь админом или модератором"""
-    return await crud.get_codes_for_admins_and_moderators(token=tokens.get("access_token"), session=session)
+    return await crud.get_codes_for_admins_and_moderators(
+        token=tokens.get("access_token"), session=session
+    )
+
 
 @router.get("/codes/secret/for/admins/only", status_code=status.HTTP_200_OK)
-async def get_codes_for_admins_and_moderators(tokens: dict = Depends(get_tokens), session: AsyncSession = Depends(db_helper.scoped_session_dependency)):
+async def get_codes_for_admins(
+    tokens: dict = Depends(get_tokens),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
     """View c проверкой на то, является ли пользователь админом"""
     return await crud.get_codes_for_admins(token=tokens.get("access_token"), session=session)

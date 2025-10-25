@@ -5,7 +5,9 @@ from api_v1.auth.auth_helpers import get_user_by_token_sub
 from api_v1.auth.dependencies import get_current_token_payload
 
 
-async def check_permission(token: str, session: AsyncSession, permissions: list[int]):
+async def check_permission(
+    token: str, session: AsyncSession, permissions: list[int], super_admin: bool | None = None
+):
     payload: dict = get_current_token_payload(token)
 
     user = await get_user_by_token_sub(payload=payload, session=session)
@@ -14,3 +16,9 @@ async def check_permission(token: str, session: AsyncSession, permissions: list[
             status_code=status.HTTP_403_FORBIDDEN,
             detail="У вас нет доступа к данному ресурсу",
         )
+    if super_admin:
+        if not user.is_superuser:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Для выполнения данного действия требуются права высшего порядка.",
+            )

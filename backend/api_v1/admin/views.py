@@ -43,7 +43,8 @@ async def edit_user_permission(
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     """
-    Изменение уровня доступа для пользователя. Только для админа.
+    Изменение уровня доступа для пользователя.
+    Только для админа высшего уровня, которого permission_level == 3 и is_superuser == True.
     """
     return await crud.edit_user_permission(
         user_id=user_id,
