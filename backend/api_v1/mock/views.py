@@ -11,11 +11,6 @@ router = APIRouter(tags=["MOCK-VIEWS"])
 @router.get(
     "/codes/open",
     status_code=status.HTTP_200_OK,
-    responses={
-        status.HTTP_403_FORBIDDEN: {
-            "describe": "У вас нет доступа к запрашиваемому ресурсу"
-        },
-    },
 )
 def get_codes_for_all_users():
     codes = {
@@ -35,6 +30,7 @@ def get_codes_for_all_users():
         status.HTTP_403_FORBIDDEN: {
             "describe": "У вас нет доступа к запрашиваемому ресурсу"
         },
+        status.HTTP_401_UNAUTHORIZED: {"describe": "Неправильный токен."},
     },
 )
 async def get_codes_for_admins_and_moderators(
@@ -55,6 +51,7 @@ async def get_codes_for_admins_and_moderators(
         status.HTTP_403_FORBIDDEN: {
             "describe": "У вас нет доступа к запрашиваемому ресурсу"
         },
+        status.HTTP_401_UNAUTHORIZED: {"describe": "Неправильный токен."},
     },
 )
 async def get_codes_for_admins(

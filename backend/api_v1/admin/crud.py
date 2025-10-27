@@ -6,9 +6,12 @@ from api_v1.auth.permissions import check_permission
 from core.models import User
 from api_v1.rollback import try_commit
 from core.models.user import PermissionLevel
+from api_v1.auth.auth_helpers import is_used_token
 
 
 async def get_users(token: str, session: AsyncSession) -> list[User]:
+    await is_used_token(token=token, session=session)
+
     await check_permission(
         token=token,
         session=session,
@@ -29,6 +32,8 @@ async def get_user_by_id(
     token: str,
     session: AsyncSession,
 ) -> User:
+    await is_used_token(token=token, session=session)
+
     await check_permission(
         token=token,
         session=session,
@@ -54,6 +59,8 @@ async def edit_user_permission(
     session: AsyncSession,
     new_permission: int,
 ) -> User:
+    await is_used_token(token=token, session=session)
+
     await check_permission(
         token=token,
         session=session,

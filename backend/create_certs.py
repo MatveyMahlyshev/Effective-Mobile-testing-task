@@ -13,7 +13,6 @@ def main():
     public_key_path = os.path.join(certs_dir, "jwt-public.pem")
 
     if os.path.exists(private_key_path) and os.path.exists(public_key_path):
-        print("JWT ключи уже существуют")
         return
 
     private_key = rsa.generate_private_key(

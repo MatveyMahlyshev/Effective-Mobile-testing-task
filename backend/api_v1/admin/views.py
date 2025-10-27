@@ -10,10 +10,16 @@ from .schemas import EditPermission
 router = APIRouter(tags=["Admin"])
 
 
-@router.get("/users/list", response_model=list[UserGet],
-            responses={
-        status.HTTP_403_FORBIDDEN: {"describe": "У вас нет доступа к запрашиваемому ресурсу"},
-    })
+@router.get(
+    "/users/list",
+    response_model=list[UserGet],
+    responses={
+        status.HTTP_403_FORBIDDEN: {
+            "describe": "У вас нет доступа к запрашиваемому ресурсу."
+        },
+        status.HTTP_401_UNAUTHORIZED: {"describe": "Неправильный токен."},
+    },
+)
 async def get_users(
     tokens: dict = Depends(get_tokens),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
@@ -24,10 +30,16 @@ async def get_users(
     return await crud.get_users(token=tokens.get("access_token"), session=session)
 
 
-@router.get("/users/{user_id}", response_model=UserGet,
-            responses={
-        status.HTTP_403_FORBIDDEN: {"describe": "У вас нет доступа к запрашиваемому ресурсу"},
-    })
+@router.get(
+    "/users/{user_id}",
+    response_model=UserGet,
+    responses={
+        status.HTTP_403_FORBIDDEN: {
+            "describe": "У вас нет доступа к запрашиваемому ресурсу."
+        },
+        status.HTTP_401_UNAUTHORIZED: {"describe": "Неправильный токен."},
+    },
+)
 async def get_user_by_id(
     user_id: int,
     tokens: dict = Depends(get_tokens),
@@ -47,8 +59,11 @@ async def get_user_by_id(
     "/edit_permission/{user_id}",
     response_model=UserGet,
     responses={
-        status.HTTP_403_FORBIDDEN: {"describe": "У вас нет доступа к запрашиваемому ресурсу"},
-    }
+        status.HTTP_403_FORBIDDEN: {
+            "describe": "У вас нет доступа к запрашиваемому ресурсу."
+        },
+        status.HTTP_401_UNAUTHORIZED: {"describe": "Неправильный токен."},
+    },
 )
 async def edit_user_permission(
     permission: EditPermission,

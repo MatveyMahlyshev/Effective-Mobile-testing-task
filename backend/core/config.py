@@ -6,9 +6,7 @@ BASE_DIR = Path(__file__).parent.parent
 
 
 class DBSettings(BaseModel):
-    url: str = (
-        "postgresql+asyncpg://postgres:postgres@db:5432/effective-mobile-db"
-    )
+    url: str = "postgresql+asyncpg://postgres:postgres@db:5432/effective-mobile-db"
     echo: bool = False
 
 

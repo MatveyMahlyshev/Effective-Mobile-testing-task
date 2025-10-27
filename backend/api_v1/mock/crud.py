@@ -2,12 +2,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api_v1.auth.permissions import check_permission
 from core.models.user import PermissionLevel
+from api_v1.auth.auth_helpers import is_used_token
 
 
 async def get_codes_for_admins_and_moderators(
     token: str,
     session: AsyncSession,
 ):
+    await is_used_token(token=token, session=session)
+
     await check_permission(
         token=token,
         session=session,
@@ -25,6 +28,8 @@ async def get_codes_for_admins(
     token: str,
     session: AsyncSession,
 ):
+    await is_used_token(token=token, session=session)
+
     await check_permission(
         token=token,
         session=session,
